@@ -1,26 +1,19 @@
 {
-  "name": "Hydro-MD",
-  "version": "3.0.0",
-  "description": "Hydro Bot Using Baileys",
+  "name": "react-bot-auto-send",
+  "version": "1.0.0",
+  "description": "Auto send data to owner via WhatsApp",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
     "start": "node index.js"
   },
-  "author": "AhmadAkbar",
-  "license": "HS",
   "dependencies": {
     "@whiskeysockets/baileys": "npm:jagproject",
-    "@adiwajshing/keyed-db": "^0.2.4",
     "@hapi/boom": "^10.0.1",
-    "axios": "^0.24.0",
-    "chalk": "^4.1.2",
-    "cheerio": "^1.0.0-rc.10",
-    "fs-extra": "^10.0.0",
+    "axios": "^1.6.0",
+    "firebase-admin": "^12.0.0",
     "pino": "^7.0.5",
     "qrcode-terminal": "^0.12.0",
-    "fluent-ffmpeg": "^2.1.2",
-    "node-fetch": "^2.6.1",
-    "wa-sticker-formatter": "^4.4.4"
+    "moment-timezone": "^0.5.43"
   }
 }
