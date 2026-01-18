@@ -144,13 +144,7 @@ break;
 	await fs.unlinkSync(media)
 }
 	break
-	case 'sbrat':  {
-if (!text) return m.reply('teksnya')
-const axios = require('axios');
-const brat = `https://brat.siputzx.my.id/image?text=${encodeURIComponent(text)}&background=%23ffffff&color=%23000000&emojiStyle=apple`
-await mane.sendImageAsSticker(m.chat, brat, m, {packname: global.packname})
-}
-break
+	
 
                 case "web3zip": {
                     if (!text) return reply(`Masukkan URL website.\n\nContoh: .${command} https://example.com`);
@@ -175,7 +169,7 @@ if (!r) r = ''
 reply(l + readmore + r)
 }
 break
-                case 'brat':
+                
                 case 'sbrat': {
                     if (!text) return reply('teksnya?')
                     const bratUrl = `https://brat.siputzx.my.id/image?text=${encodeURIComponent(text)}&background=%23ffffff&color=%23000000&emojiStyle=apple`
