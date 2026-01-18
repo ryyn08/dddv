@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Channel Booster</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); min-height: 100vh; color: white; font-family: 'Inter', sans-serif; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(139, 92, 246, 0.3); }
+        #customPopup { display: none; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full glass-card rounded-2xl p-8 shadow-2xl">
+        <div class="text-center mb-6">
+            <i class="fas fa-bolt text-4xl text-purple-500 mb-4"></i>
+            <h1 class="text-2xl font-bold">React Channel by ryyn</h1>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Input Token</label>
+                <input type="password" id="token" placeholder="Masukan token..." class="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-3 px-4 focus:border-purple-500 outline-none text-sm">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Nomor Owner Tujuan</label>
+                <input type="number" id="ownerNum" placeholder="6285883881264" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-3 px-4 focus:border-purple-500 outline-none text-sm">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Masukan Link</label>
+                <input type="text" id="postUrl" placeholder="https://whatsapp.com/channel/..." class="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-3 px-4 focus:border-purple-500 outline-none text-sm">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase">Reaction Emoji</label>
+                <input type="text" id="reactEmoji" placeholder="🔥" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-3 px-4 focus:border-purple-500 outline-none text-sm">
+            </div>
+
+            <button onclick="submitReact()" id="btnSubmit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-3 rounded-xl transition-all">
+                Kirim React
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function submitReact() {
+            const token = document.getElementById('token').value;
+            const owner = document.getElementById('ownerNum').value;
+            const url = document.getElementById('postUrl').value;
+            const react = document.getElementById('reactEmoji').value;
+
+            if (token !== "ryn") return alert("Token Salah!");
+            if (!owner || !url || !react) return alert("Harap isi semua field!");
+
+            const btn = document.getElementById('btnSubmit');
+            btn.innerHTML = 'Memproses...';
+
+            try {
+                // Simulasi kirim data ke backend bot agar otomatis forward ke WA
+                // Gunakan endpoint API sesungguhnya di sini
+                const apiUrl = `https://api-faa.my.id/faa/react-channel?url=${encodeURIComponent(url)}&react=${encodeURIComponent(react)}`;
+                await fetch(apiUrl);
+                
+                alert("Data Berhasil Terkirim ke Owner!");
+                localStorage.setItem('lastUsed', new Date().getTime());
+                
+            } catch (e) {
+                alert("Koneksi Error");
+            } finally {
+                btn.innerHTML = 'Kirim React';
+            }
+        }
+    </script>
+</body>
+</html>
