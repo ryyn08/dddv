@@ -1,19 +1,28 @@
 {
-  "name": "react-bot-auto-send",
-  "version": "1.0.0",
-  "description": "Auto send data to owner via WhatsApp",
+  "name": "ryyn-MD",
+  "version": "3.0",
+  "description": "ryyn Bot Using Baileys",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
     "start": "node index.js"
   },
+  "author": "ryyn tamvan",
+  "license": "MIT",
   "dependencies": {
+    "@adiwajshing/keyed-db": "^0.2.4",
     "@whiskeysockets/baileys": "npm:jagproject",
     "@hapi/boom": "^10.0.1",
     "axios": "^1.6.0",
-    "firebase-admin": "^12.0.0",
+    "chalk": "^4.1.2",
+    "child_process": "^1.0.2",
+    "fs-extra": "^10.0.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "jimp": "^0.16.1",
+    "node-fetch": "^2.6.1",
     "pino": "^7.0.5",
     "qrcode-terminal": "^0.12.0",
-    "moment-timezone": "^0.5.43"
+    "sharp": "^0.32.6",
+    "wa-sticker-formatter": "^4.4.4"
   }
 }
