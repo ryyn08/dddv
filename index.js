@@ -16,130 +16,128 @@ const pino = require('pino');
 const { Boom } = require('@hapi/boom');
 const fs = require('fs');
 const axios = require('axios');
-const chalk = require('chalk');
+const FileType = require('file-type');
 const { Sticker, createSticker, StickerTypes } = require('wa-sticker-formatter');
 
 const phoneNumber = "6285883881264";
+const usePairingCode = true;
+
 const store = makeInMemoryStore({ logger: pino().child({ level: 'silent', stream: 'store' }) });
 
-async function startRyynBot() {
+async function Starts() {
     const { state, saveCreds } = await useMultiFileAuthState("./session");
     const { version } = await fetchLatestBaileysVersion();
 
     const Cantarella = makeWASocket({
         version,
-        logger: pino({ level: 'fatal' }), // Memperbaiki pino logger agar tidak error
-        printQRInTerminal: false,
+        logger: pino({ level: 'fatal' }), // Diubah ke fatal agar tidak spam log tapi tidak error
+        printQRInTerminal: !usePairingCode,
         auth: state,
         browser: ["Ubuntu", "Chrome", "20.0.04"],
         markOnlineOnConnect: true,
     });
 
-    // SISTEM PAIRING
-    if (!Cantarella.authState.creds.registered) {
+    if (usePairingCode && !Cantarella.authState.creds.registered) {
         setTimeout(async () => {
             let code = await Cantarella.requestPairingCode(phoneNumber);
             code = code?.match(/.{1,4}/g)?.join("-") || code;
-            console.log(chalk.black(chalk.bgGreen(` RYNN BOT PAIRING CODE `)));
-            console.log(chalk.black(chalk.bgWhite(` Kode Anda: ${code} `)));
+            console.log(`
+╭────────────────╼
+╎ RYYN BOT PAIRING CODE : ${code}
+╰────────────────╼`);
         }, 3000);
     }
 
     Cantarella.ev.on('creds.update', saveCreds);
 
-    Cantarella.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update;
-        if (connection === 'close') {
-            let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
-            if (reason === DisconnectReason.loggedOut) { 
-                console.log("Device Logged Out, Please Delete Session and Scan Again."); 
-                process.exit();
-            } else {
-                startRyynBot();
-            }
-        } else if (connection === 'open') {
-            console.log(chalk.green("Bot Berhasil Terhubung!"));
-        }
-    });
-
     Cantarella.ev.on('messages.upsert', async chatUpdate => {
         try {
             const m = chatUpdate.messages[0];
             if (!m.message) return;
-            const contents = JSON.stringify(m.message);
-            const from = m.key.remoteJid;
             const type = Object.keys(m.message)[0];
+            const from = m.key.remoteJid;
             const body = (type === 'conversation') ? m.message.conversation : (type === 'extendedTextMessage') ? m.message.extendedTextMessage.text : (type === 'imageMessage') ? m.message.imageMessage.caption : (type === 'videoMessage') ? m.message.videoMessage.caption : '';
+            const prefix = /^[./!#]/.test(body) ? body.match(/^[./!#]/)[0] : '';
+            const command = body.startsWith(prefix) ? body.slice(prefix.length).trim().split(/ +/).shift().toLowerCase() : '';
             const args = body.trim().split(/ +/).slice(1);
             const text = args.join(" ");
-            const command = body.slice(0).trim().split(/ +/).shift().toLowerCase();
             const isOwner = ["6285883881264@s.whatsapp.net"].includes(m.key.participant || m.key.remoteJid);
 
-            // Simple Helper
+            // Fungsi Helper Reply
             const reply = (teks) => {
                 Cantarella.sendMessage(from, { text: teks }, { quoted: m });
             };
 
             switch (command) {
-                case '.menu':
-                case 'menu':
-                    const menuTeks = `╭───「 *RYYN BOTZ* 」
+                case 'menu': {
+                    const menuText = `
+╭───「 *RYYN BOTZ* 」───
 │ 
-│ • *${command}getsw* (Reply status)
-│ • *${command}rvo* (Read ViewOnce)
-│ • *${command}sbrat* <teks>
+│ 👋 Halo! Nama saya Ryyn Botz
+│ 
+│ 🛠️ *Fitur Utama:*
+│ ⮕ ${prefix}getsw (Reply Status)
+│ ⮕ ${prefix}rvo (Ambil ViewOnce)
+│ ⮕ ${prefix}sbrat [teks]
+│ ⮕ ${prefix}ping
 │
-╰──────────────╼`;
-                    reply(menuTeks);
+╰────────────────╼`;
+                    reply(menuText);
+                }
+                break;
+
+                case 'ping':
+                    reply('Pong! Bot Aktif 🚀');
                     break;
 
                 case 'getsw': {
                     if (!m.message.extendedTextMessage?.contextInfo?.quotedMessage) return reply('Reply pesan Status yang ingin kamu ambil.');
                     const quoted = m.message.extendedTextMessage.contextInfo.quotedMessage;
                     const mime = quoted.imageMessage?.mimetype || quoted.videoMessage?.mimetype;
-                    
-                    if (/image|video/.test(mime)) {
-                        const stream = await downloadContentFromMessage(quoted.imageMessage || quoted.videoMessage, mime.split('/')[0]);
+
+                    if (!/image|video/.test(mime)) return reply('Hanya bisa mengambil Status foto atau video.');
+
+                    try {
+                        const messageType = quoted.imageMessage ? 'image' : 'video';
+                        const stream = await downloadContentFromMessage(quoted[messageType + 'Message'], messageType);
                         let buffer = Buffer.from([]);
-                        for await(const chunk of stream) { buffer = Buffer.concat([buffer, chunk]) }
-                        
-                        if (quoted.imageMessage) {
-                            await Cantarella.sendMessage(from, { image: buffer, caption: "📸 *Status Dilihat*" }, { quoted: m });
-                        } else {
-                            await Cantarella.sendMessage(from, { video: buffer, caption: "🎥 *Status Dilihat*" }, { quoted: m });
-                        }
-                    } else {
-                        reply("Hanya support gambar/video status.");
+                        for await(const chunk of stream) { buffer = Buffer.concat([buffer, chunk]); }
+
+                        await Cantarella.sendMessage(from, { 
+                            [messageType]: buffer, 
+                            caption: `📸 *STATUS DOWNLOADER*\n\n${quoted[messageType + 'Message']?.caption || ''}` 
+                        }, { quoted: m });
+                    } catch (e) {
+                        console.log(e);
+                        reply('Gagal mengambil status.');
                     }
                 }
                 break;
 
                 case 'rvo': case 'readviewonce': {
-                    if (!isOwner) return reply("Khusus Owner!");
-                    const q = m.message.extendedTextMessage?.contextInfo?.quotedMessage;
-                    if (!q) return reply("Reply pesan ViewOnce!");
-                    const viewOnce = q.viewOnceMessageV2?.message || q.viewOnceMessage?.message;
-                    if (!viewOnce) return reply("Itu bukan pesan ViewOnce!");
+                    if (!isOwner) return reply('Khusus Owner!');
+                    const quoted = m.message.extendedTextMessage?.contextInfo?.quotedMessage;
+                    const viewOnceMsg = quoted?.viewOnceMessageV2?.message || quoted?.viewOnceMessage?.message;
+                    
+                    if (!viewOnceMsg) return reply('Reply pesan ViewOnce!');
 
-                    const mType = Object.keys(viewOnce)[0];
-                    const media = viewOnce[mType];
-                    const stream = await downloadContentFromMessage(media, mType.replace('Message', ''));
+                    const typeV = Object.keys(viewOnceMsg)[0];
+                    const media = viewOnceMsg[typeV];
+                    const stream = await downloadContentFromMessage(media, typeV.replace('Message', ''));
                     let buffer = Buffer.from([]);
-                    for await(const chunk of stream) { buffer = Buffer.concat([buffer, chunk]) }
+                    for await(const chunk of stream) { buffer = Buffer.concat([buffer, chunk]); }
 
-                    if (/video/.test(mType)) {
+                    if (/video/.test(typeV)) {
                         await Cantarella.sendMessage(from, { video: buffer, caption: media.caption }, { quoted: m });
-                    } else if (/image/.test(mType)) {
+                    } else if (/image/.test(typeV)) {
                         await Cantarella.sendMessage(from, { image: buffer, caption: media.caption }, { quoted: m });
-                    } else if (/audio/.test(mType)) {
-                        await Cantarella.sendMessage(from, { audio: buffer, mimetype: 'audio/mpeg', ptt: true }, { quoted: m });
                     }
                 }
                 break;
 
                 case 'sbrat': {
-                    if (!text) return reply('Masukkan teksnya! Contoh: sbrat halo');
-                    await reply("Sedang memproses...");
+                    if (!text) return reply('Ketik teksnya! Contoh: .sbrat halo');
+                    reply('Sedang memproses sticker...');
                     try {
                         const bratUrl = `https://brat.siputzx.my.id/image?text=${encodeURIComponent(text)}&background=%23ffffff&color=%23000000&emojiStyle=apple`;
                         const sticker = new Sticker(bratUrl, {
@@ -150,21 +148,28 @@ async function startRyynBot() {
                             id: '12345',
                             quality: 70,
                         });
-                        const stickerBuffer = await sticker.toBuffer();
-                        await Cantarella.sendMessage(from, { sticker: stickerBuffer }, { quoted: m });
+                        const buffer = await sticker.toBuffer();
+                        await Cantarella.sendMessage(from, { sticker: buffer }, { quoted: m });
                     } catch (e) {
-                        console.log(e);
-                        reply("Gagal membuat sticker brat.");
+                        reply('Gagal membuat sticker brat.');
                     }
                 }
                 break;
             }
         } catch (err) {
-            console.log(chalk.red("Error Upsert: "), err);
+            console.error('Error Handler:', err);
         }
     });
 
-    return Cantarella;
+    Cantarella.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update;
+        if (connection === 'close') {
+            const shouldReconnect = (lastDisconnect.error instanceof Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
+            if (shouldReconnect) Starts();
+        } else if (connection === 'open') {
+            console.log('✅ Bot Berhasil Terhubung!');
+        }
+    });
 }
 
-startRyynBot();
+Starts();
