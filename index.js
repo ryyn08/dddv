@@ -149,12 +149,12 @@ async function Starts() {
                 }
                 break;
 
-                case 'sbrat': {
+                case 'brat': {
                     if (!text) return reply('Ketik teksnya!');
                     try {
                         const bratUrl = `https://brat.siputzx.my.id/image?text=${encodeURIComponent(text)}&background=%23ffffff&color=%23000000&emojiStyle=apple`;
                         const sticker = new Sticker(bratUrl, {
-                            pack: 'Ryyn Botz',
+                            pack: 'Yan imup',
                             author: 'Ryyn Tamvan',
                             type: StickerTypes.FULL,
                         });
