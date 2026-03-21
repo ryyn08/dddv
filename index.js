@@ -14,7 +14,7 @@ const axios = require('axios');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const { FormData, Blob } = require('formdata-node'); // Pastikan install: npm install formdata-node
 
-const phoneNumber = "6283119396819";
+const phoneNumber = "6283808026590";
 const usePairingCode = true;
 
 const store = makeInMemoryStore({ logger: pino().child({ level: 'silent', stream: 'store' }) });
@@ -56,7 +56,7 @@ async function Starts() {
             const args = body.trim().split(/ +/).slice(1);
             const text = args.join(" ");
             
-            const isOwner = ["6285883881264@s.whatsapp.net"].includes(m.key.participant || m.key.remoteJid);
+            const isOwner = ["6283808026590@s.whatsapp.net"].includes(m.key.participant || m.key.remoteJid);
 
             const reply = (teks) => {
                 ryyn.sendMessage(from, { text: teks }, { quoted: m });
